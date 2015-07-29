@@ -1,17 +1,16 @@
 # ORENGEO POS LIVE DEMO
 
-This is the live demo that I've done previously in Orengeo team. The demo itself is driven by local dummy data but not connect to any backend service. Just give you the look and feel of this app and the taste of UI/UX.
+This is the live demo that I've done previously in Orengeo team. The demo itself is driven by local dummy data but not connecting to any backend service. Just give you the look and feel of this app and the taste of UI/UX.
 
 ## LIVE DEMO
 
 http://pofolio.cc/orengeo_pos/
-- You can ramdomly type in username and password to sign in.
-- This demo covers most of features except online order which can't reproduce and links which has no way to go.
-- Some features related to hardware like printer, cash drawer, swiper, are definitely not working in this case.
+- You can type in ramdom username and password to sign in.
+- This demo covers most of features except online order which can not be generated and links which has no place to go.
+- Some features requires the hardware connection like printer, cash drawer, card reader, are not working in this demo.
 - For credit card payment you can type in random number, it processes anyway. (fake transaction)
 
 ## Disclaimer
 
-I am no longer working for Orengeo team since 2014. This demo is only for display purpose in my portfolio and doesn't relate to Orengeo Inc. (Sadly, the company seems discontinued sometime last year.)
+I am no longer working for Orengeo team since 2014. This demo is only for demonstration purposes and not relate to Orengeo Inc.
 
-[About the demo](http://pofolio.cc/2013/11/04/Orengeo-POS-Revison-21/)
