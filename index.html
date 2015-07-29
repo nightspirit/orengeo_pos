@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Orengeo</title>
+    <link rel="stylesheet" type="text/css" href="css/global.css" />
+    <link rel="stylesheet" type="text/css" href="css/smoothness/jquery-ui-1.10.3.custom.min.css" />
+    <link rel="stylesheet" type="text/css" href="css/master.min.css" />
+  </head>
+  <body>
+    <!-- Apps -->
+    <section id="pos" class="app" data-bind="template: { name: 'app_layout', data: pos, as: 'app', if: pos }"></section>
+    <section id="online" class="app" data-bind="template: { name: 'app_layout', data: online, as: 'app', if: online }"></section>
+    <section id="manual" class="app" data-bind="template: { name: 'app_layout', data: manual, as: 'app', if: manual }"></section>
+    <section id="report" class="app" data-bind="template: { name: 'app_layout', data: report, as: 'app', if: report }"></section>
+    <!-- Dashboard -->
+    <section id="dashboard" data-bind="with: dash">
+      <div class="logo"></div>
+      <div class="btn_signin" data-bind="text: signinTxt, click: signinClicked"></div>
+      <ul class="main_menus">
+        <li class="pos" data-bind="click: modeSelect.bind($data, 'pos')">
+          <div class="bg"></div>
+          POS
+        </li>
+        <li class="online" data-bind="click: modeSelect.bind($data, 'online')">
+          <div class="bg"></div>
+          <p class="line1">ONLINE</p>
+          <p class="line2">ORDER</p>
+        </li>
+        <li class="payment" data-bind="click: modeSelect.bind($data, 'manual')">
+          <div class="bg"></div>
+          <p class="line1">PAYMENT</p>
+          <p class="line2">ONLY</p>
+        </li>
+      </ul>
+      <div class="sub_menus">
+        <div class="menu web expand">
+          <h3><span class="icon"></span><span class="text">Web</span></h3>
+          <ul>
+            <li data-bind="click: goto.bind($data, '/member/OwnerTransfer.aspx')">Transfer Balance</li>
+            <li data-bind="click: goto.bind($data, '/member/inbox.aspx')">Message</li>
+            <li data-bind="click: goto.bind($data, '')">Update Menu</li>
+            <li data-bind="click: goto.bind($data, '/Print/Menu/MenuPrintingTemplate.aspx')">Print Menu</li>
+          </ul>
+        </div>
+        <div class="menu report">
+          <h3 data-bind="click: modeSelect.bind($data, 'report')"><span class="icon"></span><span class="text">Report</span></h3>
+        </div>
+        <div class="menu settings">
+          <h3><span class="icon"></span><span class="text">Settings</span></h3>
+          <ul>
+            <li data-bind="click: setMPW">Manager Password</li>
+            <li data-bind="click: setPrinter">Printer</li>
+            <li data-bind="click: setTheme">Change Theme</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+    <!-- Slide panel -->
+    <section id="slidepnl" data-bind="with: slide">
+      <div data-bind="css: { 'expand': visible }">
+        <div class="overlay"></div>
+        <div class="panel" data-bind="with: panel">
+          <div data-bind="attr: { class: 'wrapper ' + name }, template: { name: tmpl, afterRender: init }"></div>
+        </div>
+      </div>
+    </section>
+    <!-- popup -->
+    <section id="popup" data-bind="with: popup">
+      <div class="overlay">
+        <div class="wrapper" data-bind="with: dialog">
+          <div data-bind="attr: { class: 'dialog ' + name }, template: { name: tmpl, afterRender: init }"></div>
+        </div>
+      </div>
+    </section>
+    <!-- snapped screen-->
+    <section id="snapscreen"></section>
+    <!-- Templates -->
+    <script type="text/html" id="pagination_pager">
+      <span class="page arrow prev" data-bind="css: { disable: index() == 1 }, click: prev"><span class="icon"></span></span>
+      <span class="pages" data-bind="template: { name: 'pagination_number', foreach: pagers }"></span>
+      <span class="page arrow next" data-bind="css: { disable: index() == maxPage() }, click: next"><span class="icon"></span></span>
+      <div class="clear"></div>
+    </script>
+    <script type="text/html" id="pagination_number">
+      <span class="page number" data-bind="text: $data, css: { current: $data == $parent.index() }, click: $parent.pagerClick"></span>
+    </script>
+    <script type="text/html" id="dropdown">
+      <span class="arrow"></span>
+      <div class="selected" data-bind="template: { if: selected, name: 'dropdown-option', data: selected }"></div>
+      <div class="options" data-bind="template: { if: options, name: 'dropdown-option', foreach: options }"></div>
+    </script>
+    <script type="text/html" id="dropdown-option">
+      <div class="option"><span data-bind="attr: { 'class': 'icon ' + css }"></span><span class="text" data-bind="    text: name, if: name"></span></div>
+    </script>
+    <!-- dialog -->
+    <script type="text/html" id="dialog_loading">
+      <span class="text" data-bind="text: text"></span>
+      <span class="icon"></span>
+    </script>
+    <script type="text/html" id="dialog_message">
+      <div class="bg"></div>
+      <div class="message" data-bind="html: msg"></div>
+    </script>
+    <script type="text/html" id="dialog_confirm">
+      <div class="message" data-bind="html: msg"></div>
+      <div class="btns">
+        <div data-bind="visible: !btn2, click: positive" class="regbtn positive">OK</div>
+        <div data-bind="visible: btn2, click: negative" class="regbtn negative">NO</div>
+        <div data-bind="visible: btn2, click: positive" class="regbtn positive">YES</div>
+      </div>
+    </script>
+    <script type="text/html" id="dialog_option">
+      <h3>Item Option</h3>
+      <div class="wg_option" data-bind="template: { name: 'wg_option', data: option, as: 'option', afterRender: option.init }"></div>
+    </script>
+    <script type="text/html" id="dialog_credit">
+      <div class="swipe" data-bind="visible: !showManual()">
+        <p>Swipe a card to continue...</p>
+        <p>We accept:<span class="crediticon"></span></p>
+        or <span class="regbtn" data-bind="click: swap">Enter Card Number</span>
+      </div>
+      <div class="manual" data-bind="with: card, visible: showManual()">
+        <h3>Enter Credit Card</h3>
+        <p>
+          <input type="tel" data-bind="value: number" placeholder="Credit Card Number" />
+        </p>
+        <p class="col3">
+          <select data-bind="options: monthOption, optionsText: function (item) { return item.name }, value: month, optionsCaption: 'Month'"></select>
+          <select data-bind="options: yearOption, optionsText: function (item) { return item.name }, value: year, optionsCaption: 'Year'"></select>
+          <input type="tel" data-bind="value: cvv2" placeholder="CVV2" />
+        </p>
+        <p>
+          <input type="text" data-bind="value: name" placeholder="Credit Holder's Name (optional)" />
+        </p>
+        <p class="error" data-bind="text: error"></p>
+        <p>
+          <span class="regbtn" data-bind="click: submit">Submit</span>
+        </p>
+      </div>
+    </script>
+    <script type="text/html" id="dialog_split">
+      <div data-bind="with: splitbill">
+        <h3>How many bills? (Max <span data-bind="text: maxSplits"></span>)<input min="2" data-bind='value: denominatorInput' type="number" /></h3>
+        <div style="height:15px">&nbsp;</div>
+        <div class="splits">
+          <span data-bind="foreach: { data: splits }">
+            <span class="split">
+              <input data-bind="value: $data" type="number" />
+            </span>
+          </span>
+          <span class="split">
+            <input data-bind="value: last" readonly="true" type="number" />
+          </span>
+        </div>
+
+        <div class="clear"></div>
+        <div class="total">Total <span data-bind='text: "$" + total()'></span></div>
+        <div class="error" data-bind="text: error"></div>
+        <div class="btn">
+          <div class="regbtn" data-bind="click: splitClicked">SPLIT</div>
+        </div>
+      </div>
+    </script>
+    <!-- slide panel -->
+    <script type="text/html" id="panel_signin">
+      <div class="header">
+        <h3>SIGN IN</h3>
+      </div>
+      <div class="content">
+        <div class="form">
+          <input class="email" type="text" placeholder="Email" />
+          <input class="pw" type="password" placeholder="Password" />
+          <div class="error"></div>
+        </div>
+        <div class="footer">
+          <p class="center"><span class="regbtn submit">Sign In</span></p>
+          <p><a class="forget" href="#">Forget Password?</a></p>
+          <p class="last">New to Orengeo? <a class="register" href="#">Register</a></p>
+          <div class="loading">
+            <span>Signing In...</span>
+          </div>
+        </div>
+      </div>
+    </script>
+    <script type="text/html" id="panel_password">
+      <div class="header">
+        <h3>
+          <span class="small">Manager</span><br />
+          PASSWORD
+        </h3>
+      </div>
+      <div class="content">
+        <div class="form">
+          <input class="old" type="password" placeholder="Old Password" />
+          <input class="new" type="password" placeholder="New Password" />
+          <input class="confirm" type="password" placeholder="Confirm Password" />
+          <div class="error"></div>
+        </div>
+        <div class="footer">
+          <p class="center"><span class="regbtn submit">SUBMIT</span></p>
+        </div>
+        <div class="note">
+          <h4>What is Manager Password?</h4>
+          <p>It's a secondary password to secure the accessibility to <em>Sales Report</em> and <em>Printer Setup</em>.</p>
+        </div>
+      </div>
+    </script>
+    <script type="text/html" id="panel_printer">
+      <div class="header">
+        <h3>Printer</h3>
+      </div>
+      <div class="content">
+        <div class="form">
+          <input class="cashier" type="text" placeholder="Cashier" />
+          <input class="kitchen" type="text" placeholder="Kitchen (optional)" />
+          <input class="kitchen" type="text" placeholder="Kitchen2 (optional)" />
+          <input class="kitchen" type="text" placeholder="Kitchen3 (optional)" />
+        </div>
+        <ul class="option">
+          <li><span class="text">Cut Paper</span><span class="checkbox cutpaper selected"></span></li>
+          <li><span class="text">Open Drawer</span><span class="checkbox kickdrawer selected"></span></li>
+          <li><span class="text">Auto Print</span><span class="checkbox autoprint selected"></span></li>
+        </ul>
+        <div class="footer">
+          <p class="center"><span class="regbtn submit">SAVE</span></p>
+        </div>
+      </div>
+    </script>
+    <script type="text/html" id="panel_theme">
+      <div class="header">
+        <h3>
+          <span class="small">Change</span><br />
+          Theme
+        </h3>
+      </div>
+      <div class="content">
+        <ul class="themes">
+          <li><span class="check"></span></li>
+          <li><span class="check"></span></li>
+          <li><span class="check"></span></li>
+          <li><span class="check"></span></li>
+        </ul>
+      </div>
+    </script>
+    <script type="text/html" id="panel_setting">
+      <div class="header">
+        <h3>Setting</h3>
+      </div>
+      <div class="content">
+        <ul class="main">
+          <li data-bind="click: go2db">Go to Dashboard</li>
+          <li data-bind="click: editoption, visible: master_mode() !== 'manual'">Item Option</li>
+          <li data-bind="click: restart">Restart App</li>
+        </ul>
+        <ul class="bottom">
+          <li class="opendrawer" data-bind="click: openDrawer"><span class="icon"></span><span class="text">Open Drawer</span></li>
+          <li class="signout" data-bind="click: signout"><span class="icon"></span><span class="text">Sign Out</span></li>
+        </ul>
+      </div>
+    </script>
+    <!-- APP -->
+    <script type="text/html" id="app_layout">
+      <div class="layout head">
+        <div class="bar">
+          <div class="modetag" data-bind="html: appTag"></div>
+          <div class="tabs" data-bind="template: { name: appTabs() }"></div>
+        </div>
+      </div>
+      <div class="layout body" data-bind="template: { name: appBody(), afterRender: app.init }"></div>
+    </script>
+    <script type="text/html" id="app_tabs_pos">
+      <ul class="main">
+        <li data-bind="css: { selected: tab() == 'order' }, click: tabSelect.bind($data, 'order')"><span class="text">Order +</span></li>
+        <li data-bind="css: { selected: tab() == 'payment' }, click: tabSelect.bind($data, 'payment')"><span class="text">Payment</span></li>
+      </ul>
+      <ul class="sub">
+        <li class="online" data-bind="css: { selected: tab() == 'online' }, click: tabSelect.bind($data, 'online')"><span class="icon"></span>Online Order <span class="counter" data-bind="    text: online.newCount">0</span></li>
+        <li class="tips" data-bind="css: { selected: tab() == 'tips' }, click: tabSelect.bind($data, 'tips')"><span class="icon"></span>Tips Adj <span class="counter" data-bind="    text: orders.authorizedCount">0</span></li>
+        <li class="history" data-bind="css: { selected: tab() == 'history' }, click: tabSelect.bind($data, 'history')"><span class="icon"></span>History</li>
+        <li class="setting" data-bind="css: { selected: tab() == 'setting' }, click: setting"><span class="icon"></span></li>
+      </ul>
+    </script>
+    <script type="text/html" id="app_body_pos">
+      <div class="layout right">
+        <div class="sec_invoice" data-bind="template: { name: 'sec_invoice', data: invoice, if: invoice, afterRender: invoice.init }"></div>
+        <div class="sec_online invoice" data-bind="template: { name: 'sec_online_invoice' }"></div>
+      </div>
+      <div class="layout left">
+        <div class="sec_menu" data-bind="template: { name: 'sec_menu' }"></div>
+        <div class="sec_payment" data-bind="template: { name: 'sec_payment' }"></div>
+        <div class="sec_online orders" data-bind="template: { name: 'sec_online_orders' }"></div>
+      </div>
+      <div class="splash">
+        <div class="wrapper">
+          <span class="text">Loading...</span>
+          <span class="icon"></span>
+        </div>
+      </div>
+    </script>
+    <script type="text/html" id="app_tabs_online">
+      <ul class="main">
+        <li data-bind="css: { selected: tab() == 'online' }, click: tabSelect.bind($data, 'online')"><span class="text">Order(s)</span></li>
+        <li data-bind="css: { selected: tab() == 'payment' }, click: tabSelect.bind($data, 'payment')"><span class="text">Payment</span></li>
+      </ul>
+      <ul class="sub">
+        <li class="tips" data-bind="css: { selected: tab() == 'tips' }, click: tabSelect.bind($data, 'tips')"><span class="icon"></span>Tips Adj <span class="counter" data-bind="    text: orders.authorizedCount">0</span></li>
+        <li class="history" data-bind="css: { selected: tab() == 'history' }, click: tabSelect.bind($data, 'history')"><span class="icon"></span>History</li>
+        <li class="setting" data-bind="css: { selected: tab() == 'setting' }, click: setting"><span class="icon"></span></li>
+      </ul>
+    </script>
+    <script type="text/html" id="app_tabs_manual">
+      <ul class="main">
+        <li data-bind="css: { selected: tab() == 'sale' }, click: tabSelect.bind($data, 'sale')"><span class="text">Sale +</span></li>
+        <li data-bind="css: { selected: tab() == 'payment' }, click: tabSelect.bind($data, 'payment')"><span class="text">Payment</span></li>
+      </ul>
+      <ul class="sub">
+        <li class="tips" data-bind="css: { selected: tab() == 'tips' }, click: tabSelect.bind($data, 'tips')"><span class="icon"></span>Tips Adj <span class="counter" data-bind="    text: orders.authorizedCount">0</span></li>
+        <li class="history" data-bind="css: { selected: tab() == 'history' }, click: tabSelect.bind($data, 'history')"><span class="icon"></span>History</li>
+        <li class="setting" data-bind="css: { selected: tab() == 'setting' }, click: setting"><span class="icon"></span></li>
+      </ul>
+    </script>
+    <script type="text/html" id="app_body_manual">
+      <div class="layout right">
+        <div class="sec_invoice" data-bind="template: { name: 'sec_manual_invoice', data: invoice, if: invoice, afterRender: invoice.init }"></div>
+      </div>
+      <div class="layout left">
+        <div class="sec_sale" data-bind="template: { name: 'sec_manual_sale' }"></div>
+        <div class="sec_payment" data-bind="template: { name: 'sec_manual_payment' }"></div>
+      </div>
+      <div class="splash">
+        <div class="wrapper">
+          <span class="text">Loading...</span>
+          <span class="icon"></span>
+        </div>
+      </div>
+    </script>
+    <script type="text/html" id="app_tabs_report">
+      <div class="period">
+        <div class="date start">
+          <span class="icon"></span>
+          <span data-bind="text: startTxt"></span>
+          <input type="text" data-bind="value: startTxt" />
+        </div>
+        <div class="seperator">to</div>
+        <div class="date end">
+          <span class="icon"></span>
+          <span data-bind="text: endTxt"></span>
+          <input type="text" data-bind="value: endTxt" />
+        </div>
+      </div>
+      <div class="btn close" data-bind="click: go2db"><span class="icon"></span></div>
+    </script>
+    <script type="text/html" id="app_body_report">
+      <div class="right">
+        <div class="blk total_sales" data-bind="template: { name: 'wg_report_blk', data: total_sales, if: total_sales }"></div>
+        <div class="blk number_sales" data-bind="template: { name: 'wg_report_blk', data: number_sales, if: number_sales }"></div>
+      </div>
+      <div class="left">
+        <div class="wrapper">
+          <div class="summary" data-bind="template: { name: 'wg_report_summary', data: summary, if: summary }"></div>
+        </div>
+      </div>
+    </script>
+    <!-- section -->
+    <script type="text/html" id="sec_menu">
+      <div class="left">
+        <div class="wg_category scrollable" data-bind="template: { name: 'wg_category', data: category, if: category, afterRender: category.init }"></div>
+      </div>
+      <div class="right">
+        <div class="wg_menu" data-bind="template: { name: 'wg_menu', data: menu.pagination, if: menu, afterRender: menu.init }"></div>
+      </div>
+    </script>
+    <script type="text/html" id="sec_payment">
+      <div class="wg_orders" data-bind="template: { name: 'wg_orders', data: orders, as: 'wgorders', if: orders, afterRender: orders.init }"></div>
+    </script>
+    <script type="text/html" id="sec_invoice">
+      <div class="right">
+        <div class="wg_actions" data-bind="template: { name: 'wg_invoice_actions', if: state() !== 'empty' }"></div>
+      </div>
+      <div class="left">
+        <div class="wg_invoice" data-bind="template: { name: 'wg_invoice' }"></div>
+      </div>
+      <div class="clear"></div>
+      <div class="loading" data-bind="visible: ajaxloading"></div>
+      <div class="wg_customer" data-bind="template: { name: 'wg_customer' }"></div>
+    </script>
+    <script type="text/html" id="sec_online_orders">
+      <div class="wg_online wg_orders" data-bind="template: { name: 'wg_online_orders', data: online, if: online, afterRender: online.order_init }"></div>
+    </script>
+    <script type="text/html" id="sec_online_invoice">
+      <div class="right">
+        <div class="wg_online wg_actions" data-bind="template: { name: 'wg_online_actions', data: online, if: online }"></div>
+      </div>
+      <div class="left">
+        <div class="wg_online wg_invoice" data-bind="template: { name: 'wg_online_invoice', data: online, if: online, afterRender: online.invoice_init }"></div>
+      </div>
+      <div class="clear"></div>
+    </script>
+    <script type="text/html" id="sec_manual_sale">
+      <div class="wg_keypad" data-bind="template: { name: 'wg_keypad', data: keypad, if: keypad }"></div>
+    </script>
+    <script type="text/html" id="sec_manual_payment">
+      <div class="wg_manual wg_orders" data-bind="template: { name: 'wg_orders', data: orders, as: 'wgorders', if: orders, afterRender: orders.init }"></div>
+    </script>
+    <script type="text/html" id="sec_manual_invoice">
+      <div class="right">
+        <div class="wg_manual wg_actions" data-bind="template: { name: 'wg_invoice_actions' }"></div>
+      </div>
+      <div class="left">
+        <div class="wg_manual wg_invoice" data-bind="template: { name: 'wg_manual_invoice' }"></div>
+      </div>
+      <div class="clear"></div>
+      <div class="loading" data-bind="visible: ajaxloading"></div>
+      <div class="wg_customer" data-bind="template: { name: 'wg_customer' }"></div>
+    </script>
+    <!-- widget -->
+    <script type="text/html" id="wg_category">
+      <div class="list">
+        <div class="allitems selected">Menu</div>
+        <ul data-bind="template: { name: 'wg_category_item', foreach: cates }"></ul>
+      </div>
+    </script>
+    <script type="text/html" id="wg_category_item">
+      <li><span data-bind="html: name"></span></li>
+    </script>
+    <script type="text/html" id="wg_menu">
+      <div class="wrapper">
+        <div class="items" data-bind="template: { name: 'wg_menu_item', foreach: items }"></div>
+      </div>
+      <div class="pager" data-bind="template: { name: 'pagination_pager' }"></div>
+      <div class="clear"></div>
+    </script>
+    <script type="text/html" id="wg_menu_item">
+      <div class='item' data-bind="click: clicked">
+        <span class="title" data-bind="text: title"></span>
+        <span class="price" data-bind="text: '$ ' + price.toFixed(2)"></span>
+      </div>
+    </script>
+    <script type="text/html" id="wg_orders">
+      <div class="header">
+        <div class="filters">
+          <div class="wg_dropdown type_select" data-bind="template: { name: 'dropdown', data: typeSelect, afterRender: typeSelect.init }"></div>
+          <div class="wg_dropdown pay_select" data-bind="template: { name: 'dropdown', data: paySelect, afterRender: paySelect.init }"></div>
+        </div>
+        <div class="clear"></div>
+      </div>
+      <div class="views scrollable">
+        <div data-bind="template: { name: 'wg_orders_group', foreach: groups }"></div>
+      </div>
+      <div class="salesummary" data-bind="with: salesummary, visible: view() == 'history'">
+        <div class="wrapper">
+          <ul class="left">
+            <li>
+              <label>Cash:</label>
+              <span class="amount" data-bind="text: '$ ' + cash.toFixed(2)"></span>
+              <span class="tip" data-bind="text: '(Tips: $ ' + cash_tips.toFixed(2) + ')'"></span>
+            </li>
+            <li>
+              <label>Credit:</label>
+              <span class="amount" data-bind="text: '$ ' + credit.toFixed(2)"></span>
+              <span class="tip" data-bind="text: '(Tips: $ ' + credit_tips.toFixed(2) + ')'"></span>
+            </li>
+          </ul>
+          <ul class="right">
+            <li>
+              <label>Total Sales</label>
+            </li>
+            <li><span class="total amount" data-bind="text: '$ ' + total.toFixed(2)"></span></li>
+          </ul>
+          <div class="clear"></div>
+        </div>
+      </div>
+      <div class="noresult" data-bind="visible: !selected_id()">
+        No result...
+      </div>
+    </script>
+    <script type="text/html" id="wg_orders_group">
+      <div class="group" data-bind="visible: orders().length ">
+        <div class='name' data-bind="html: title"></div>
+        <div class='list' data-bind="template: { name: $parent.item_tmpl(), foreach: orders }"></div>
+      </div>
+    </script>
+    <script type="text/html" id="wg_orders_item">
+      <div class="order" data-bind="click: clicked, css: { 'selected': selected }">
+        <p><span data-bind="text: checkin_date.to12h()"></span></p>
+        <p>
+          <span data-bind="if: table_number !== 'takeout'">
+            Staff: <b data-bind="    text: staff_name"></b>
+          </span>
+          <span data-bind="if: table_number == 'takeout'">
+            Contact: <b data-bind="    text: reservation_name"></b>
+          </span>
+        </p>
+        <p>
+          <span class="store_type" data-bind="css: { 'takeout': table_number.toLowerCase() == 'takeout' }"></span>
+          <span data-bind="text: '# ' + order_id"></span>
+        </p>
+      </div>
+    </script>
+    <script type="text/html" id="wg_orders_item_complete">
+      <div class="order" data-bind="click: clicked, css: { 'selected': selected }">
+        <p>
+          <span class="store_type" data-bind="css: { 'takeout': table_number.toLowerCase() == 'takeout' }"></span>
+          <span data-bind="text: table_number.toUpperCase()"></span>
+        </p>
+        <p>
+          <span class="pay_type" data-bind="    visible: /split|complete/.test(status) || !!payment_ref_id, css: { 'credit': payment_type == 'credit', 'cash': payment_type == 'cash', 'split': status == 'split', 'authorized': !!payment_ref_id }"></span>
+          <span class="total" data-bind="    text: '$ ' + paid_total.toFixed(2)"></span>
+        </p>
+        <p>
+          <span data-bind="text: '# ' + order_id"></span>
+          <span data-bind="text: '(' + checkin_date.to12h() + ')'"></span>
+        </p>
+      </div>
+    </script>
+    <script type="text/html" id="wg_orders_item_manual">
+      <div class="order" data-bind="click: clicked, css: { 'selected': selected }">
+        <p><span data-bind="text: checkin_date.to12h()"></span></p>
+        <p><span class="total" data-bind="text: '$ ' + amount.toFixed(2)"></span></p>
+        <p><span data-bind="text: '# ' + order_id"></span></p>
+      </div>
+    </script>
+    <script type="text/html" id="wg_invoice">
+      <div class="head" data-bind="template: { data: order, name: head_tmpl() }"></div>
+      <div class="body scrollable">
+        <div data-bind="template: { name: 'wg_itemlist' }"></div>
+      </div>
+      <div class="foot" data-bind="template: { name: 'wg_invoice_summary' }"></div>
+      <div class="optionSelect">
+        <div class="wg_option" data-bind="template: { name: 'wg_option', data: option, as: 'option', afterRender: option.init }"></div>
+      </div>
+      <div class="notePeak" data-bind="        template: { name: 'wg_notepeak', data: notepeak, if: notepeak }, visible: notepeak"></div>
+      <div class="noresult" data-bind="visible: state() == 'empty'"><span>&lt;&lt; Select an order to manage</span></div>
+    </script>
+    <script type="text/html" id="wg_invoice_head_new">
+      <span class="type dinein" data-bind="click: orderTypeClicked, css: { 'dinein': !isTakeOut(), 'takeout': isTakeOut() }">
+        <span class="switch"></span>
+        <span class="text" data-bind="text: isTakeOut() ? 'Take Out' : 'Dine In'"></span>
+      </span>
+      <input type="text" class="first shadow" data-bind="attr: { 'placeholder': ph_table }, value: table, disable: isTakeOut()" />
+      <br />
+      <input type="text" class="second shadow" data-bind="attr: { 'placeholder': ph_name }, value: name" />
+    </script>
+    <script type="text/html" id="wg_invoice_head">
+      <div class="header">
+        <h3 data-bind="text: isTakeOut() ? 'Take Out' : table().toUpperCase()">A21</h3>
+        <div class="name">
+          <span data-bind="text: isTakeOut() ? 'Contact' : 'Staff'"></span>
+          <br />
+          <span data-bind="text: name"></span>
+        </div>
+        <div class="clear"></div>
+      </div>
+    </script>
+    <script type="text/html" id="wg_invoice_summary">
+      <ul class="summary">
+        <li data-bind="if: /cash|credit|complete/.test(state()) && !!chargeTo()">
+          <label>Charge to</label>
+          <span class="data" data-bind="text: chargeTo()"></span>
+        </li>
+        <li>
+          <label>Subtotal</label>
+          <span class="data" data-bind="text: '$ ' + subtotal().toFixed(2)"></span>
+        </li>
+        <li data-bind="if: !/new/.test(state())">
+          <label>
+            Discount
+            <span data-bind="if: !/current|cash|credit/.test(state()) || openSignature()">
+              <span data-bind="text: '(' + discount_percent() + '%)'"></span>
+            </span>
+            <span data-bind="if: /current|cash|credit/.test(state()) && !openSignature()">
+              <span data-bind="text: '($ ' + discount_amount().toFixed(2) + ')'"></span>
+            </span>
+          </label>
+          <span class="data">
+            <span data-bind="if: !/current|cash|credit/.test(state()) || openSignature()">
+              <span data-bind="text: '($ ' + discount_amount().toFixed(2) + ')'"></span>
+            </span>
+            <span data-bind="if: /current|cash|credit/.test(state()) && !openSignature()">
+              %
+              <input class="discount" type="number" step="1" data-bind="    value: discount_percent" />
+            </span>
+          </span>
+        </li>
+        <li data-bind="if: !/new/.test(state())">
+          <label>Tips</label>
+          <span class="data">
+            <span data-bind="if: !/current|cash|credit/.test(state()) || openSignature()">
+              <span data-bind="text: '$ ' + tip_amount().toFixed(2)"></span>
+            </span>
+            <span data-bind="if: /current|cash|credit/.test(state()) && !openSignature()">
+              $
+              <input type="number" step="0.01" data-bind="value: tip_amount" />
+            </span>
+          </span>
+        </li>
+        <li>
+          <label>Tax <span data-bind="text: '(' + tax_percent().toFixed(3) + '%)'"></span></label>
+          <span class="data" data-bind="text: '$ ' + tax_amount().toFixed(2)"></span>
+        </li>
+        <li class="total">
+          <label>Total</label>
+          <span class="data" data-bind="text: '$ ' + total().toFixed(2)"></span>
+        </li>
+        <li data-bind="if: state() == 'cash'">
+          <label>Received</label>
+          <span class="data">
+            $
+            <input type="number" step="0.01" data-bind="value: receivedCash" />
+          </span>
+        </li>
+      </ul>
+    </script>
+    <script type="text/html" id="wg_invoice_actions">
+      <ul class="top">
+        <li data-bind="if: /current|modified/.test(state())">
+          <p data-bind="if: !isManual(), visible: !isManual()"><span class="btn" data-bind="    click: listAction.bind($data, 'add'), css: { 'selected': list_mode() == 'add' }">ADD</span></p>
+          <p data-bind="if: isManual()"><span class="btn" data-bind="    click: listAction.bind($data, 'manual'), css: { 'selected': list_mode() == 'manual' }">ADD</span></p>
+        </li>
+        <li data-bind="if: items().length && /new|current|modified/.test(state())">
+          <p><span class="btn" data-bind="click: listAction.bind($data, 'remove'), css: { 'selected': list_mode() == 'remove' }">REMOVE</span></p>
+          <p data-bind="if: !isManual()"><span class="btn" data-bind="    click: listAction.bind($data, 'note'), css: { 'selected': list_mode() == 'note' }">NOTE</span></p>
+        </li>
+        <li data-bind="if: /cash|credit/.test(state())">
+          <p><span class="btn em" data-bind="click: processClicked">PROCESS</span></p>
+          <p data-bind="if: state() == 'credit'"><span class="btn em sm" data-bind="    click: signClicked">SIGNATURE</span></p>
+        </li>
+        <li data-bind="if: state() == 'subbill'">
+          <p><span class="btn em" data-bind="click: swipeClicked">CREDIT CARD</span></p>
+          <p><span class="btn em" data-bind="click: cashClicked">CASH</span></p>
+        </li>
+        <li data-bind="if: state() == 'authorized'">
+          <p>Tips ($)</p>
+          <p>
+            <label></label>
+            <input class="tip_adjust" type="number" step="0.01" data-bind="value: tip_amount" />
+          </p>
+          <p><span class="btn em sm" data-bind="click: ProcessPayment.bind($data, false)">COMPLETE</span></p>
+        </li>
+      </ul>
+      <ul class="bottom">
+        <li data-bind="if: state() == 'new'">
+          <p><span class="btn em" data-bind="    css: { disable: !validateOrder() }, click: makeOrder">MAKE</span></p>
+        </li>
+        <li data-bind="if: state() == 'current' && !isOnlineOrder()">
+          <p><span class="btn em" data-bind="click: swipeClicked">CREDIT CARD</span></p>
+          <p><span class="btn em" data-bind="click: cashClicked">CASH</span></p>
+          <!--p><span class="btn" data-bind="click: splitClicked">SPLIT</span></p-->
+        </li>
+        <li data-bind="if: state() == 'current' && isOnlineOrder()">
+          <p><span class="btn em" data-bind="click: onlinepayClicked">PAY</span></p>
+        </li>
+        <li data-bind="if: state() == 'modified'">
+          <p><span class="btn em" data-bind="click: saveChange">CHANGE</span></p>
+        </li>
+        <li data-bind="if: state() == 'authorized'">
+          <p><span class="btn sm" data-bind="click: signClicked">SIGNATURE</span></p>
+        </li>
+        <li data-bind="if: /current|authorized|subbill|split|complete/.test(state())">
+          <p><span class="btn" data-bind="click: printClicked">PRINT</span></p>
+        </li>
+        <li data-bind="if: /cash|credit|modified/.test(state())">
+          <p><span class="btn" data-bind="click: cancelAction">BACK</span></p>
+        </li>
+        <li data-bind="if: state() == 'authorized'">
+          <p><span class="btn" data-bind="click: cancelOrder.bind($data, true)">VOID</span></p>
+        </li>
+        <li data-bind="if: /current/.test(state())">
+          <p><span class="btn" data-bind="click: cancelOrder.bind($data, false)">CANCEL</span></p>
+        </li>
+        <li data-bind="if: state() == 'split'">
+          <p><span class="btn" data-bind="click: undoClicked">UNDO</span></p>
+        </li>
+        <li data-bind="if: state() == 'complete'">
+          <p><span class="btn" data-bind="click: voidOrder">VOID</span></p>
+        </li>
+      </ul>
+    </script>
+    <script type="text/html" id="wg_itemlist">
+      <div class="itemlist">
+        <div class="head">
+          <span class="title">ITEM</span>
+          <span class="price" data-bind="text: list_mode() == 'remove' ? 'REMOVE' : 'PRICE'"></span>
+          <span class="qty">QTY.</span>
+        </div>
+        <div class="items" data-bind="template: { name: item_tmpl(), foreach: items }"></div>
+        <div class="clear"></div>
+      </div>
+    </script>
+    <script type="text/html" id="wg_itemlist_item">
+      <div class="item">
+        <div class="row basic">
+          <span class="title"><span data-bind="    css: { 'icon commented': comment() || options() }"></span><span class="text" data-bind="    text: title"></span></span>
+          <span class="price"><span class="text" data-bind="text: '$ ' + amount().toFixed(2), visible: $parent.list_mode() !== 'remove'"></span><span data-bind="    visible: $parent.list_mode() == 'remove'" class="icon remove"></span></span>
+          <span class="qty">
+            <input type="number" data-bind="attr: { readonly: !(/new|current|modified/.test($parent.state())) }, value: quantity" />
+          </span>
+        </div>
+        <div class="row" data-bind="template: { name: 'wg_itemlist_item_extend', if: $parent.list_mode() == 'note' }, css: { 'extend': $parent.list_mode() == 'note' }"></div>
+        <div class="clear"></div>
+      </div>
+    </script>
+    <script type="text/html" id="wg_itemlist_item_extend">
+      <ul class="options" data-bind="foreach: optionObjs, visible: optionObjs().length">
+        <li data-bind="attr: { 'tid': option_id }"><span class="text" data-bind="    text: option_name"></span><span class="remove">X</span></li>
+      </ul>
+      <input type="text" data-bind="value: comment" placeholder="Add Note" />
+    </script>
+    <script type="text/html" id="wg_notepeak">
+      <ul class="options" data-bind="foreach: optionObjs">
+        <li><span class="text" data-bind="    text: option_name"></span></li>
+      </ul>
+      <div class="comment" data-bind="text: comment"></div>
+    </script>
+    <script type="text/html" id="wg_option">
+      <div class="quickedit" data-bind="visible: mode().match(/add/), text: quickedit_txt, click: editClicked">Quick Edit</div>
+      <div class="editarea">
+        <h3 data-bind="visible: !editing()">Item Option</h3>
+        <div data-bind="visible: editing()">
+          <input type="text" placeholder="New Option" data-bind="value: input" />
+          <input type="number" placeholder="Addon Price" data-bind="value: price" />
+          <ul class="btns">
+            <li class="regbtn" data-bind="visible: !selectedTag(), click: addTag">+</li>
+            <li class="regbtn" data-bind="visible: selectedTag, click: editTag">Change</li>
+          </ul>
+        </div>
+      </div>
+      <div class="list" data-bind="with: tagsPagination">
+        <ul data-bind="foreach: items">
+          <li><span class="text" data-bind="    text: option_name"></span><span class="remove" data-bind="    if: option.editing()">X</span></li>
+        </ul>
+        <div class="pager" data-bind="template: { name: 'pagination_pager' }"></div>
+      </div>
+    </script>
+    <script type="text/html" id="wg_customer">
+      <div class="left">
+        <div class="header">
+          <div class="btn close" data-bind="click: signClose"><span class="icon"></span></div>
+          <h3>RECEIPT</h3>
+        </div>
+        <div class="body">
+          <div class="itemlist">
+            <div class="head">
+              <span class="title">ITEM</span>
+              <span class="price">PRICE</span>
+              <span class="qty">QTY.</span>
+            </div>
+            <div class="items" data-bind="foreach: items ">
+              <div class="item">
+                <div class="row">
+                  <span class="title"><span class="text" data-bind="text: title"></span></span>
+                  <span class="price" data-bind="text: '$ ' + amount().toFixed(2)"></span>
+                  <span class="qty" data-bind="text: quantity"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer" data-bind="template: { name: 'wg_invoice_summary' }"></div>
+      </div>
+      <div class="right">
+        <div class="wrapper">
+          <div class="ad"></div>
+          <div class="adjust form">
+            <div class="wrapper">
+              <ul>
+                <li class="tips">
+                  <label>
+                    Tips
+                  </label>
+                  <div class="data">
+                    <input type="number" step="0.01" data-bind="value: tip_amount" />
+                  </div>
+                </li>
+                <li class="total">
+                  <label>Total</label>
+                  <div class="data">
+                    <input type="number" step="0.01" data-bind="value: total" />
+                  </div>
+                </li>
+              </ul>
+              <div class="email">
+                <label>Want Email Receipt?</label>
+                <input type="text" placeholder="Your Email" data-bind="value: email" />
+              </div>
+            </div>
+          </div>
+
+          <div class="signing">
+            <canvas class="canvas_signature"></canvas>
+            <div class="spliter">X</div>
+            <div class="regbtn" data-bind="click: signPay">PAY</div>
+            <div class="note">By signing this, I agree to authorize to be charge my credit card.</div>
+            <div class="clear"></div>
+          </div>
+        </div>
+      </div>
+    </script>
+    <script type="text/html" id="wg_report_blk">
+      <h3 data-bind="text: title"></h3>
+      <ul data-bind="foreach: items">
+        <li>
+          <label>
+            <span data-bind="text: '$ ' + amount.toFixed(2), visible: !$parent.showCount"></span>
+            <span data-bind="text: p_count, visible: $parent.showCount"></span>
+          </label>
+          <span class="name">
+            <span class="text" data-bind="text: title"></span>
+          </span>
+        </li>
+      </ul>
+    </script>
+    <script type="text/html" id="wg_report_summary">
+      <table>
+        <tr>
+          <th rowspan="2"></th>
+          <th colspan="2">Total Transaction</th>
+          <th>Tips</th>
+          <th>Taxes</th>
+          <th rowspan="2" class="gross">Gross Sales<span class="em" data-bind="text: '$ ' + total.gross_sales.toFixed(2)"></span></th>
+        </tr>
+        <tr>
+          <td>Amount</td>
+          <td># of Sales</td>
+          <td>Amount</td>
+          <td>Amount</td>
+        </tr>
+        <tr>
+          <td>Credit</td>
+          <td>
+            <p data-bind="text: '$ ' + credit.total_paid.toFixed(2)"></p>
+          </td>
+          <td>
+            <p data-bind="text: credit.sales_count"></p>
+          </td>
+          <td>
+            <p data-bind="text: '$ ' + credit.tip_amount.toFixed(2)"></p>
+          </td>
+          <td>
+            <p data-bind="text: '$ ' + credit.tax_amount.toFixed(2)"></p>
+          </td>
+          <td rowspan="3" class="note">
+            <ul>
+              <li>
+                <p>
+                  Void (<span data-bind="text: total.void_count"></span> issued)
+                </p>
+                <p data-bind="text: '$ ' + (-total.void_amount).toFixed(2)"></p>
+              </li>
+              <li>
+
+                <p>
+                  Discount (<span data-bind="text: total.discount_count"></span> issued)
+                </p>
+                <p data-bind="text: '$ ' + (-total.discount_amount).toFixed(2)"></p>
+              </li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td>Cash</td>
+          <td>
+            <p data-bind="text: '$ ' + cash.total_paid.toFixed(2)"></p>
+          </td>
+          <td>
+            <p data-bind="text: cash.sales_count"></p>
+          </td>
+          <td>
+            <p data-bind="text: '$ ' + cash.tip_amount.toFixed(2)"></p>
+          </td>
+          <td>
+            <p data-bind="text: '$ ' + cash.tax_amount.toFixed(2)"></p>
+          </td>
+        </tr>
+        <tr>
+          <td>Total</td>
+          <td>
+            <p data-bind="text: '$ ' + total.total_paid.toFixed(2)"></p>
+          </td>
+          <td>
+            <p data-bind="text: total.sales_count"></p>
+          </td>
+          <td>
+            <p data-bind="text: '$ ' + total.tip_amount.toFixed(2)"></p>
+          </td>
+          <td>
+            <p data-bind="text: '$ ' + total.tax_amount.toFixed(2)"></p>
+          </td>
+        </tr>
+      </table>
+    </script>
+    <script type="text/html" id="wg_online_orders">
+      <div class="header">
+        <div class="filters">
+          <div class="wg_dropdown datepicker" data-bind="template: { name: 'dropdown', data: datepicker, afterRender: datepicker.init }"></div>
+        </div>
+        <div class="clear"></div>
+      </div>
+      <div class="views" data-bind="foreach: orders">
+        <div class="order" data-bind="click: clicked, css: { 'selected': selected }">
+          <p><span data-bind="text: timeTxt"></span></p>
+          <p>
+            <span class="store_type" data-bind="css: { 'takeout': isTakeout() }"></span>
+            <span data-bind="text: typeTxt"></span>
+          </p>
+          <p><span data-bind="text: statusTxt"></span></p>
+          <span class="flag" data-bind="visible: status() == 'initiated'"></span>
+        </div>
+      </div>
+      <div class="noresult" data-bind="visible: !orders()">
+        No result...
+      </div>
+    </script>
+    <script type="text/html" id="wg_online_invoice">
+      <div class="head">
+        <ul data-bind="click: tabToggle">
+          <li data-bind="css: { 'selected': !tabOrder() }">Info</li>
+          <li data-bind="css: { 'selected': tabOrder() }">Order</li>
+        </ul>
+        <div class="clear"></div>
+      </div>
+      <div class="tab info" data-bind="template: { name: 'wg_online_tab_info', data: selected, if: selected }"></div>
+      <div class="tab order" data-bind="template: { name: 'wg_online_tab_order', afterRender: tab_order_init }"></div>
+      <div class="noresult" data-bind="visible: !selected()">
+        <span>&lt;&lt; Select an online order to manage</span>
+      </div>
+    </script>
+    <script type="text/html" id="wg_online_tab_info">
+      <ul>
+        <li>
+          <label>Order No.</label>
+          <div class="data"><span data-bind="text: order_id"></span></div>
+        </li>
+        <li>
+          <label>Date</label>
+          <div class="data"><span data-bind="text: dateTxt"></span></div>
+        </li>
+        <li>
+          <label>Time</label>
+          <div class="data"><span data-bind="text: timeTxt"></span></div>
+        </li>
+        <li data-bind="visible: !isTakeout()">
+          <label>Group Size</label>
+          <div class="data"><span data-bind="text: group_size"></span></div>
+        </li>
+      </ul>
+      <ul>
+        <li>
+          <label>Customer</label>
+          <div class="data"><span data-bind="text: reservation_name"></span></div>
+
+        </li>
+        <li>
+          <label>Phone</label>
+          <div class="data"><span data-bind="text: phone_number"></span></div>
+        </li>
+        <li>
+          <label>Email</label>
+          <div class="data"><span data-bind="text: email_address"></span></div>
+        </li>
+      </ul>
+      <dl data-bind="if: special_request">
+        <dt>Note</dt>
+        <dd data-bind="text: special_request"></dd>
+      </dl>
+    </script>
+    <script type="text/html" id="wg_online_tab_order">
+      <div class="itemlist scrollable" data-bind="with: selected">
+        <div class="head">
+          <span class="title">ITEM</span>
+          <span class="price">PRICE</span>
+          <span class="qty">QTY.</span>
+        </div>
+        <div class="items" data-bind="foreach: items ">
+          <div class="item">
+            <div class="row">
+              <span class="title"><span class="text" data-bind="text: item"></span></span>
+              <span class="price" data-bind="text: '$ ' + unit_price.toFixed(2)"></span>
+              <span class="qty" data-bind="text: qty"></span>
+            </div>
+            <div class="clear"></div>
+          </div>
+        </div>
+      </div>
+      <ul class="summary" data-bind="with: selected">
+        <li>
+          <label>Subtotal</label>
+          <span class="data" data-bind="text: '$ ' + subtotal().toFixed(2)"></span>
+        </li>
+        <li>
+          <label>Discount</label>
+          <span class="data" data-bind="text: '($ ' + discount_amount().toFixed(2) + ')'"></span>
+        </li>
+        <li>
+          <label>Tax <span data-bind="text: '(' + tax_percent().toFixed(3) + '%)'"></span></label>
+          <span class="data" data-bind="text: '$ ' + tax_amount().toFixed(2)"></span>
+        </li>
+        <li class="total">
+          <span class="data" data-bind="text: '$ ' + total().toFixed(2)"></span>
+        </li>
+      </ul>
+    </script>
+    <script type="text/html" id="wg_online_actions">
+      <ul class="top" data-bind="if: actionbtn() == 'initiated'">
+        <li>
+          <p><span class="btn em" data-bind="click: confirmOrder.bind($data, true)">CONFIRM</span></p>
+        </li>
+        <li>
+          <p><span class="btn" data-bind="click: confirmOrder.bind($data, false)">DECLINE</span></p>
+        </li>
+      </ul>
+      <ul class="top" data-bind="if: actionbtn() == 'confirmed'">
+        <li>
+          <p>
+            <input type="text" class="table" placeholder="Table #" data-bind="value: table" />
+          </p>
+        </li>
+        <li>
+          <p>
+            <input type="text" class="staff" placeholder="Staff" data-bind="value: staff" />
+          </p>
+        </li>
+        <li>
+          <p><span class="btn em" data-bind="css: { disable: !validateCheckin() }, click: checkIn">CHECK IN</span></p>
+        </li>
+      </ul>
+    </script>
+    <script type="text/html" id="wg_keypad">
+      <table>
+        <tr>
+          <th colspan="5">
+            <p class="display">
+              <span class="label" data-bind="text: mode().toUpperCase()"></span>
+              <span class="sign" data-bind="text: mode() == 'discount' ? '%' : '$'"></span>
+              <span class="amount" data-bind="text: amount()"></span>
+            </p>
+          </th>
+        </tr>
+        <tr>
+          <td data-bind="click: numClicked.bind($data, '7')"><span class="num">7</span></td>
+          <td data-bind="click: numClicked.bind($data, '8')"><span class="num">8</span></td>
+          <td data-bind="click: numClicked.bind($data, '9')"><span class="num">9</span></td>
+          <td data-bind="click: clear"><span class="icon backslash"></span></td>
+        </tr>
+        <tr>
+          <td data-bind="click: numClicked.bind($data, '4')"><span class="num">4</span></td>
+          <td data-bind="click: numClicked.bind($data, '5')"><span class="num">5</span></td>
+          <td data-bind="click: numClicked.bind($data, '6')"><span class="num">6</span></td>
+          <td rowspan="3" data-bind="click: confirmed"><span class="icon" data-bind="    css: { 'add': mode() == 'add', 'enter': mode() !== 'add' }"></span></td>
+        </tr>
+        <tr>
+          <td data-bind="click: numClicked.bind($data, '1')"><span class="num">1</span></td>
+          <td data-bind="click: numClicked.bind($data, '2')"><span class="num">2</span></td>
+          <td data-bind="click: numClicked.bind($data, '3')"><span class="num">3</span></td>
+        </tr>
+        <tr>
+          <td colspan="2" data-bind="click: numClicked.bind($data, '00')"><span class="num">00</span></td>
+          <td data-bind="click: numClicked.bind($data, '0')"><span class="num">0</span></td>
+        </tr>
+      </table>
+    </script>
+    <script type="text/html" id="wg_manual_invoice">
+      <div class="body">
+        <div data-bind="template: { name: 'wg_itemlist' }"></div>
+      </div>
+      <div class="foot" data-bind="template: { name: 'wg_manual_summary' }"></div>
+      <div class="noresult" data-bind="visible: state() == 'empty'"><span>&lt;&lt; Select an order to manage</span></div>
+    </script>
+    <script type="text/html" id="wg_manual_itemlist_item">
+      <div class="item">
+        <div class="row">
+          <span class="title">
+            <input type="text" data-bind="attr: { readonly: !(/new|current|modified/.test($parent.state())) }, value: title" />
+          </span>
+          <span class="price"><span class="text" data-bind="text: '$ ' + amount().toFixed(2), visible: $parent.list_mode() !== 'remove'"></span><span data-bind="    visible: $parent.list_mode() == 'remove'" class="icon remove"></span></span>
+          <span class="qty">
+            <input type="number" data-bind="attr: { readonly: !(/new|current|modified/.test($parent.state())) }, value: quantity" />
+          </span>
+        </div>
+        <div class="clear"></div>
+      </div>
+    </script>
+    <script type="text/html" id="wg_manual_summary">
+      <ul class="summary">
+        <li data-bind="if: /cash|credit|complete/.test(state()) && !!chargeTo()">
+          <label>Charge to</label>
+          <span class="data" data-bind="text: chargeTo()"></span>
+        </li>
+        <li>
+          <label>Subtotal</label>
+          <span class="data" data-bind="text: '$ ' + subtotal().toFixed(2)"></span>
+        </li>
+        <li data-bind="if: !/new/.test(state())">
+          <label>
+            Discount
+            <span data-bind="if: !/cash|credit/.test(state())">
+              <span data-bind="text: '(' + discount_percent() + '%)'"></span>
+            </span>
+            <span data-bind="if: /cash|credit/.test(state())">
+              <span data-bind="text: '($ ' + discount_amount().toFixed(2) + ')'"></span>
+            </span>
+          </label>
+          <span class="data">
+            <span data-bind="if: !/cash|credit/.test(state())">
+              <span data-bind="text: '($ ' + discount_amount().toFixed(2) + ')'"></span>
+            </span>
+            <span data-bind="if: /cash|credit/.test(state())">
+              %
+              <span class="edit" data-bind="css: { 'selected': list_mode() == 'discount' }, click: listAction.bind($data, 'discount'), text: discount_percent"></span>
+            </span>
+          </span>
+        </li>
+        <li data-bind="if: !/new/.test(state())">
+          <label>Tips</label>
+          <span class="data">
+            <span data-bind="if: !/cash|credit/.test(state())">
+              <span data-bind="text: '$ ' + tip_amount().toFixed(2)"></span>
+            </span>
+            <span data-bind="if: /cash|credit/.test(state())">
+              $
+              <span class="edit" data-bind="css: { 'selected': list_mode() == 'tips' }, click: listAction.bind($data, 'tips'), text: tip_amount().toFixed(2)"></span>
+            </span>
+          </span>
+        </li>
+        <li>
+          <label>Tax <span data-bind="text: '(' + tax_percent().toFixed(3) + '%)'"></span></label>
+          <span class="data" data-bind="text: '$ ' + tax_amount().toFixed(2)"></span>
+        </li>
+        <li class="total">
+          <label>Total</label>
+          <span class="data" data-bind="text: '$ ' + total().toFixed(2)"></span>
+        </li>
+        <li data-bind="if: state() == 'cash'">
+          <label>Received</label>
+          <span class="data">
+            $
+            <span class="edit" data-bind="css: { 'selected': list_mode() == 'received' }, click: listAction.bind($data, 'received'), text: receivedCash()"></span>
+          </span>
+        </li>
+
+      </ul>
+    </script>
+    <!-- JS -->
+    <script type="text/javascript" src="js/knockout-2.3.0.js"></script>
+    <script type="text/javascript" src="js/jquery-2.0.3.min.js"></script>
+    <script type="text/javascript" src="js/jquery.json-2.4.min.js"></script>
+    <script type="text/javascript" src="js/jquery.nicescroll.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.10.3.custom.min.js"></script>
+    <script type="text/javascript" src="js/signature_pad.min.js"></script>
+    <script type="text/javascript" src="dummy_data.js"></script>
+    <script type="text/javascript" src="js/app.js"></script>
+  </body>
+</html>
