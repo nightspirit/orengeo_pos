@@ -12,6 +12,6 @@ http://pofolio.cc/orengeo_pos/
 
 ## Disclaimer
 
-I am no longer working for Orengeo team since 2014. This demo is only for display purpose in my portfolio and doesn't relate to Orengeo Inc. (Sadly, the company seems like discontinued sometime last year.)
+I am no longer working for Orengeo team since 2014. This demo is only for display purpose in my portfolio and doesn't relate to Orengeo Inc. (Sadly, the company seems discontinued sometime last year.)
 
 [About the demo](http://pofolio.cc/2013/11/04/Orengeo-POS-Revison-21/)
